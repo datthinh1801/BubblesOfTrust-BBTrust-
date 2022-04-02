@@ -202,7 +202,7 @@ class RPCFault(RPCError):
     def __str__(self):
         return repr(self)
     def __repr__(self):
-        return( "<RPCFault %s: %s (%s)>" % (self.error_code, repr(self.error_message), repr(self.error_data)) )
+        return f"<RPCFault {self.error_code}: {repr(self.error_message)} ({repr(self.error_data)})>"
 
 class RPCParseError(RPCFault):
     """Broken rpc-package. (PARSE_ERROR)"""
@@ -264,10 +264,7 @@ def dictkeyclean(d):
 
     :Raises: UnicodeEncodeError
     """
-    new_d = {}
-    for (k, v) in d.iteritems():
-        new_d[str(k)] = v
-    return new_d
+    return {str(k): v for (k, v) in d.iteritems()}
 
 #----------------------
 # JSON-RPC 1.0
@@ -709,9 +706,7 @@ class Transport:
             - maybe make n_current accessible? (e.g. for logging)
         """
         n_current = 0
-        while 1:
-            if n is not None  and  n_current >= n:
-                break
+        while 1 and not (n is not None and n_current >= n):
             data = self.recv()
             result = handler(data)
             if result is not None:
@@ -761,22 +756,22 @@ class TransportSocket(Transport):
         self.log    = logfunc
     def connect( self ):
         self.close()
-        self.log( "connect to %s" % repr(self.addr) )
+        self.log(f"connect to {repr(self.addr)}")
         self.s = socket.socket( self.s_type, self.s_prot )
         self.s.settimeout( self.timeout )
         self.s.connect( self.addr )
     def close( self ):
         if self.s is not None:
-            self.log( "close %s" % repr(self.addr) )
+            self.log(f"close {repr(self.addr)}")
             self.s.close()
             self.s = None
     def __repr__(self):
-        return "<TransportSocket, %s>" % repr(self.addr)
+        return f"<TransportSocket, {repr(self.addr)}>"
     
     def send( self, string ):
         if self.s is None:
             self.connect()
-        self.log( "--> "+repr(string) )
+        self.log(f"--> {repr(string)}")
         self.s.sendall( string )
     def recv( self ):
         if self.s is None:
@@ -787,7 +782,7 @@ class TransportSocket(Transport):
             if len(d) == 0:
                 break
             data += d
-        self.log( "<-- "+repr(data) )
+        self.log(f"<-- {repr(data)}")
         return data
 
     def sendrecv( self, string ):
@@ -806,22 +801,20 @@ class TransportSocket(Transport):
         self.close()
         self.s = socket.socket( self.s_type, self.s_prot )
         try:
-            self.log( "listen %s" % repr(self.addr) )
+            self.log(f"listen {repr(self.addr)}")
             self.s.bind( self.addr )
             self.s.listen(1)
             n_current = 0
-            while 1:
-                if n is not None  and  n_current >= n:
-                    break
+            while 1 and not (n is not None and n_current >= n):
                 conn, addr = self.s.accept()
-                self.log( "%s connected" % repr(addr) )
+                self.log(f"{repr(addr)} connected")
                 data = conn.recv(self.limit)
-                self.log( "%s --> %s" % (repr(addr), repr(data)) )
+                self.log(f"{repr(addr)} --> {repr(data)}")
                 result = handler(data)
                 if data is not None:
-                    self.log( "%s <-- %s" % (repr(addr), repr(result)) )
+                    self.log(f"{repr(addr)} <-- {repr(result)}")
                     conn.send( result )
-                self.log( "%s close" % repr(addr) )
+                self.log(f"{repr(addr)} close")
                 conn.close()
                 n_current += 1
         finally:
@@ -888,7 +881,7 @@ class ServerProxy:
     def __str__(self):
         return repr(self)
     def __repr__(self):
-        return "<ServerProxy for %s, with serializer %s>" % (self.__transport, self.__data_serializer)
+        return f"<ServerProxy for {self.__transport}, with serializer {self.__data_serializer}>"
 
     def __req( self, methodname, args=None, kwargs=None, id=0 ):
         # JSON-RPC 1.0: only positional parameters
@@ -931,7 +924,7 @@ class _method:
     def __getattr__(self, name):
         if name[0] == "_":  #prevent rpc-calls for proxy._*-functions
             raise AttributeError("invalid attribute '%s'" % name)
-        return _method(self.__req, "%s.%s" % (self.__name, name))
+        return _method(self.__req, f"{self.__name}.{name}")
     def __call__(self, *args, **kwargs):
         return self.__req(self.__name, args, kwargs)
 
@@ -971,7 +964,7 @@ class Server:
         self.funcs = {}
 
     def __repr__(self):
-        return "<Server for %s, with serializer %s>" % (self.__transport, self.__data_serializer)
+        return f"<Server for {self.__transport}, with serializer {self.__data_serializer}>"
 
     def log(self, message):
         """write a message to the logfile (in utf-8)"""
@@ -999,7 +992,7 @@ class Server:
                 if name is None:
                     self.register_function( getattr(myinst, e) )
                 else:
-                    self.register_function( getattr(myinst, e), name="%s.%s" % (name, e) )
+                    self.register_function(getattr(myinst, e), name=f"{name}.{e}")
     def register_function(self, function, name=None):
         """Add a function to the RPC-services.
         
