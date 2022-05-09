@@ -22,10 +22,10 @@
 
 
 
-#define FOLLOWER_IMG "/home/mohamed/THESE/Journal/Implementation/img/follower.png"
-#define MASTER_IMG   "/home/mohamed/THESE/Journal/Implementation/img/master.png"
-#define FAIL_TRANSAC "/home/mohamed/THESE/Journal/Implementation/img/failed.png"
-#define SUCC_TRANSAC "/home/mohamed/THESE/Journal/Implementation/img/success.png"
+#define FOLLOWER_IMG "/home/ubuntu/BubblesOfTrust-BBTrust-/img/follower.png"
+#define MASTER_IMG   "/home/ubuntu/BubblesOfTrust-BBTrust-/img/master.png"
+#define FAIL_TRANSAC "/home/ubuntu/BubblesOfTrust-BBTrust-/img/failed.png"
+#define SUCC_TRANSAC "/home/ubuntu/BubblesOfTrust-BBTrust-/img/success.png"
 
 
 
@@ -33,7 +33,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), blockchain (NULL), m_category (1)
 {
     setupUi(this) ;
-    setLogo("/home/mohamed/THESE/Journal/Implementation/img/follower.png") ;
+    setLogo("/home/ubuntu/BubblesOfTrust-BBTrust-/img/follower.png") ;
     QObject::connect(comboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(SwitchLogo(int))) ;
 
 }
@@ -62,6 +62,7 @@ void MainWindow::SwitchLogo(int index)
         textEdit->setEnabled(false);
     }
 }
+
 void MainWindow::on_startButton_clicked ()
 {
     QString transactionHash ;
@@ -94,8 +95,6 @@ void MainWindow::on_startButton_clicked ()
     blockchain->setMyExternalAddress(lineEdit6->text()) ;
     blockchain->setContractAddress(lineEdit3->text());
 
-
-
     QString     paramsTypes ("uint8,uint8,uint8,uint256,uint256") ;
     QStringList paramsValues ;
 
@@ -111,20 +110,28 @@ void MainWindow::on_startButton_clicked ()
     }
 
 
-     transactionHash = blockchain->CallFunction(blockchain->getMyExternalAddress(),
+    // FIXME: Sender account is not recognized
+    // qDebug() << blockchain->getMyExternalAddress();
+    // qDebug() << blockchain->getContractAddress();
+    // qDebug() << blockchain->EncodeFunction(blockchain->EncodeFunctionSelector("BCTrustV2_AddNode(uint8,uint8,uint8,uint256,uint256)"),
+    //                                                                        paramsTypes,
+    //                                                                        paramsValues);
+
+    // qDebug() << paramsValues;
+    // qDebug() << blockchain->getMyExternalAddress();
+
+    // params are ok
+    transactionHash = blockchain->CallFunction(blockchain->getMyExternalAddress(),
                                                 blockchain->getContractAddress(),
                                                 blockchain->EncodeFunction(blockchain->EncodeFunctionSelector("BCTrustV2_AddNode(uint8,uint8,uint8,uint256,uint256)"),
                                                                            paramsTypes,
                                                                            paramsValues),
                                                 "eth_sendTransaction"
                                                 ) ;
-    qDebug() << transactionHash ;
 
     paramsValues.clear() ;
-
     paramsTypes = "" ;
-
-
+    /*
     res =    blockchain->DecodeUint64(blockchain->CallFunction(blockchain->getMyExternalAddress(),
                                                                blockchain->getContractAddress(),
                                                                blockchain->EncodeFunction(blockchain->EncodeFunctionSelector("test()"),
@@ -133,8 +140,11 @@ void MainWindow::on_startButton_clicked ()
                                                                "eth_call"
                                                                )
                                       ) ;
+    qDebug() << res;
+    */
 
-    if  (res != 0 && transactionHash != "") {
+    // if  (res != 0 && transactionHash != "") {
+    if  (transactionHash != "") {
         labTansaction->setPixmap(QPixmap(SUCC_TRANSAC)) ;
         this->setMinimumHeight(480) ;
 
@@ -179,6 +189,7 @@ void MainWindow::on_readButton_clicked()
     QStringList paramsValues ;
 
     paramsValues.append (blockchain->EncodeUint8 (lineEdit5->text().toUInt(0, 16))) ; // object ID of the sender
+    
 
     res = blockchain->DecodeString(blockchain->CallFunction(blockchain->getMyExternalAddress(),
                                                             blockchain->getContractAddress(),
@@ -194,7 +205,6 @@ void MainWindow::on_readButton_clicked()
     paramsValues.clear() ;
 
 }
-
 
 int32_t MainWindow::FromQStringToUint8(u_int8_t * bytes, int32_t bytesLen, const QString& strArray)
 {
@@ -238,8 +248,6 @@ error:
 
     return rc ;
 }
-
-
 
 void MainWindow::Print_uint8 (const char * title, u_int8_t * data, int32_t dataLen)
 {

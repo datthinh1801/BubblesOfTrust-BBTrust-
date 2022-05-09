@@ -12,8 +12,9 @@
 
 
 #include "Blockchain.h"
+#include <QDataStream>
 
-#define CONTRACT_PATH "/home/mohamed/THESE/Journal/Implementation/BCTrustV2/contracts/BCTrustV2.sol"
+#define CONTRACT_PATH "/home/ubuntu/home/ubuntu/BubblesOfTrust-BBTrust-/BCTrustV2/contracts/BCTrustV2.sol"
 #define _32Bytes       64
 #define _AddrTypeLen   (20 * 2)
 #define _AddrPaddLen   _32Bytes - _AddrTypeLen
@@ -42,6 +43,7 @@ QString Blockchain::getCoinbaseFromTheBlockChain ()
 {
     QJsonRpcMessage request  = QJsonRpcMessage::createRequest("eth_coinbase") ;
     QJsonRpcMessage response = client->sendMessageBlocking(request) ;
+
     if (response.type() == QJsonRpcMessage::Error) {
         qDebug() << response.errorData() ;
         return "" ; // todo: change it
@@ -76,6 +78,7 @@ void Blockchain::setMyExternalAddress (const QString& _myExternalAddress)
     myExternalAddress = _myExternalAddress ;
 }
 
+// still need debug the test() function
 QString Blockchain::CallFunction (const QString &from,
                                   const QString& to,
                                   const QString& data,
@@ -87,23 +90,32 @@ QString Blockchain::CallFunction (const QString &from,
     QJsonRpcMessage request      ;
     QJsonRpcMessage response     ;
 
-    resultObject.insert("from", from) ;
-    resultObject.insert("to",   to  ) ;
+    QString prepended_from = "0x" + from;
+    QString prepended_to = "0x" + to;
+
+    resultObject.insert("from", prepended_from) ;
+    resultObject.insert("to",   prepended_to  ) ;
     resultObject.insert("data", data) ;
 
+    // qDebug() << resultObject;
     params.append(resultObject) ;
-        // I can use only 10 args ;
+
+    // I can use only 10 args ;
     request  = QJsonRpcMessage::createRequest(eth_methodName, QJsonArray::fromVariantList(params)) ; // Executes a new message call immediately without creating a transaction on the block chain
     response = client->sendMessageBlocking(request) ;
+    // qDebug() << response;
+
     if (response.type() == QJsonRpcMessage::Error) {
         qDebug() << "Error:Blockchain::CallFunction," << eth_methodName << response.errorData() ;
         // exit (0) ; // todo change it
+        return "";
     }
 
     return response.result().toString() ;
 }
 
 
+// ok
 QString Blockchain::EncodeFunctionSelector(const QString& functionSelector)
 {
 
@@ -125,11 +137,12 @@ bool Blockchain::IsDynamicType(const QString& type) {
     return false ;
 }
 
-
+// ok
 QString Blockchain::EncodeFunction(const QString& functionSelector, const QString& paramsType, QStringList paramsValues)
 {
     QString     value   = ""  ;
     int         dP      = 0   ;
+
 
     if (paramsType == "") {
         value = "0x" + functionSelector ;
@@ -207,10 +220,12 @@ QString Blockchain::EncodeUint64(u_int64_t value)
 u_int64_t Blockchain::DecodeUint64(const QString& value)
 {
     bool ok;
-
+    qDebug() << value;
     quint64 decodedValue = (value).toUInt(&ok, 16) ;
-    if (!ok)
+
+    if (!ok) {
         qDebug() << "Error: Blockchain::DecodeUint64, Conversion failed!";
+    }
 
     return (u_int64_t) decodedValue ;
 }

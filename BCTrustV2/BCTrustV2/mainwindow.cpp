@@ -19,7 +19,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), blockchain (NULL)
 {
     setupUi(this) ;
-    labelPicture->setPixmap(QPixmap("/home/mohamed/THESE/Journal/Implementation/img/pic1.png"));
+    labelPicture->setPixmap(QPixmap("/home/ubuntu/BubblesOfTrust-BBTrust-/img/pic1.png"));
 
 }
 
