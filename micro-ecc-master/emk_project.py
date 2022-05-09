@@ -82,9 +82,9 @@ def setup_arm_thumb():
         utils.call("/cross/arm_cortex/bin/arm-none-eabi-objcopy", "-O", "binary", requires[0], produces[0])
 
     def handle_exe(path):
-        emk.depend(path, "/Projects/lpc11xx/core/" + emk.build_dir + "/board_cstartup.o")
-        emk.rule(do_objcopy, path + ".bin", path, cwd_safe=True, ex_safe=True)
-        emk.autobuild(path + ".bin")
+        emk.depend(path, f"/Projects/lpc11xx/core/{emk.build_dir}/board_cstartup.o")
+        emk.rule(do_objcopy, f'{path}.bin', path, cwd_safe=True, ex_safe=True)
+        emk.autobuild(f'{path}.bin')
 
     link.exe_funcs.append(handle_exe)
     link.strip = True
@@ -124,4 +124,4 @@ if not emk.cleaning:
     else:
         raise emk.BuildError("Unknown target arch '%s'" % (build_arch))
 
-    c.defines["TARGET_ARCH_" + build_arch.upper()] = 1
+    c.defines[f"TARGET_ARCH_{build_arch.upper()}"] = 1
