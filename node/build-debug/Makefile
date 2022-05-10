@@ -373,7 +373,7 @@ moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 compiler_moc_header_make_all: moc_mainwindow.cpp moc_Httpclient.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_mainwindow.cpp moc_Httpclient.cpp
-moc_mainwindow.cpp: ui_MainWindow.h \
+moc_mainwindow.cpp: ../node/ui_MainWindow.h \
 		../node/Blockchain.h \
 		../node/Httpclient.h \
 		../node/devonit-qjsonrpc-f85751b70231/src/json/qjsonvalue.h \
@@ -430,7 +430,7 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 ####### Compile
 
 main.o: ../node/main.cpp ../node/mainwindow.h \
-		ui_MainWindow.h \
+		../node/ui_MainWindow.h \
 		../node/Blockchain.h \
 		../node/Httpclient.h \
 		../node/devonit-qjsonrpc-f85751b70231/src/json/qjsonvalue.h \
@@ -448,7 +448,7 @@ main.o: ../node/main.cpp ../node/mainwindow.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../node/main.cpp
 
 mainwindow.o: ../node/mainwindow.cpp ../node/mainwindow.h \
-		ui_MainWindow.h \
+		../node/ui_MainWindow.h \
 		../node/Blockchain.h \
 		../node/Httpclient.h \
 		../node/devonit-qjsonrpc-f85751b70231/src/json/qjsonvalue.h \

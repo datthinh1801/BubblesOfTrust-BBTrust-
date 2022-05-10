@@ -147,7 +147,8 @@ contract BCTrustV2 {
 
 	function test() returns (uint8) 
 	{
-		return uint8(ids[msg.sender][0]) ;
+		// return uint8(ids[msg.sender][0]) ;
+		return 10;
 	}
 	
 		

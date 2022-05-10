@@ -97,33 +97,32 @@ QString Blockchain::CallFunction (const QString &from,
     resultObject.insert("to",   prepended_to  ) ;
     resultObject.insert("data", data) ;
 
-    // qDebug() << resultObject;
     params.append(resultObject) ;
 
     // I can use only 10 args ;
-    request  = QJsonRpcMessage::createRequest(eth_methodName, QJsonArray::fromVariantList(params)) ; // Executes a new message call immediately without creating a transaction on the block chain
+    // Executes a new message call immediately without creating a transaction on the block chain
+    request  = QJsonRpcMessage::createRequest(eth_methodName, QJsonArray::fromVariantList(params)) ;
     response = client->sendMessageBlocking(request) ;
-    // qDebug() << response;
 
     if (response.type() == QJsonRpcMessage::Error) {
         qDebug() << "Error:Blockchain::CallFunction," << eth_methodName << response.errorData() ;
-        // exit (0) ; // todo change it
-        return "";
+        return "" ; // todo change it
     }
 
     return response.result().toString() ;
 }
 
 
-// ok
+// incorrect hash function
+// expected keccak 256
 QString Blockchain::EncodeFunctionSelector(const QString& functionSelector)
 {
-
     QByteArray data ;
     data.append(functionSelector) ; // using this append the Unicode functionName is converted into 8-bit characters using QString::toAscii()
-    QByteArray md = QCryptographicHash::hash(data, QCryptographicHash::Sha3_256) ;
-    QString first4bytes(md.toHex()) ;
+    // QByteArray md = QCryptographicHash::hash(data, QCryptographicHash::Sha3_256) ;
+    QByteArray md = QCryptographicHash::hash(data, QCryptographicHash::Keccak_256) ;
 
+    QString first4bytes(md.toHex()) ;
     return first4bytes.left(8) ;
 }
 
@@ -143,17 +142,17 @@ QString Blockchain::EncodeFunction(const QString& functionSelector, const QStrin
     QString     value   = ""  ;
     int         dP      = 0   ;
 
-
+    // functionSelector is already encoded by the caller
     if (paramsType == "") {
         value = "0x" + functionSelector ;
-        QString padding ;
-        padding.fill('0', _32Bytes) ;
-
-        return value + padding ;
+        // QString padding ;
+        // padding.fill('0', _32Bytes) ;   // why filling with 64 of 0s??
+        // return value + padding ;
+        return value;
     }
 
-    QStringList paramsTypes  = paramsType.split(',') ;
 
+    QStringList paramsTypes  = paramsType.split(',') ;
     QList <int> dataPosList ; // for the dynamic types
 
     if (paramsTypes.length() != paramsValues.length()) {
@@ -163,12 +162,14 @@ QString Blockchain::EncodeFunction(const QString& functionSelector, const QStrin
 
     value = "0x" + functionSelector ;
 
+    // compute the position of
     for (int i = 0; i < paramsTypes.length(); i++) {
         if (IsDynamicType(paramsTypes.at(i))) {
             dP += 32 * paramsTypes.length() ;
 
             for (int j = 0; j < i; j++) {
                 if (IsDynamicType(paramsTypes.at(j))) {
+                    // paramsValues are individually encoded before being passed to the function
                     int dynamicLen = DecodeUint64(paramsValues.at(j).left(_32Bytes)) ;
                     dP += 32 + dynamicLen + (32 - (dynamicLen % 32)) ; // 32 for the dynamicTypeLen of prec dynamicType + ...
                 }
@@ -181,6 +182,7 @@ QString Blockchain::EncodeFunction(const QString& functionSelector, const QStrin
     dP = 0 ;
 
     for (int i = 0; i < paramsTypes.length(); i++) {
+        // if type i'th is a str or int
         if (IsDynamicType(paramsTypes.at(i))) {
             value += EncodeUint64(dataPosList.at(dP)) ;
             dP ++ ;
